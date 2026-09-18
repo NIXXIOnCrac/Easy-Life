@@ -266,5 +266,10 @@ Full build/install/update details: **[`BUILD.md`](BUILD.md)**.
 
 ---
 
+🐛 Found a bug?
+Tell me and I'll fix it — include what you were doing, what you expected, and a screenshot if you can.
+
+🐞 Or open a GitHub Issue: New Issue
+
 Made with ❤️ by **yoki8ems** — *The App For Streamers, By Streamers.*  
-🐾 [twitch.tv/yoki8ems](https://twitch.tv/yoki8ems)
+ [twitch.tv/yoki8ems](https://twitch.tv/yoki8ems)
