@@ -1,0 +1,19 @@
+{
+  "name": "pc-rituals",
+  "version": "1.0.0",
+  "description": "A local-first Windows automation app. Create **Rituals** — ordered sequences of PC actions (launch apps/games/websites, run commands, delay, close apps, control power) — and run them with live progress, from the desktop UI or from your iPhone via a paired PWA.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "jsdom": "^30.0.1"
+  }
+}

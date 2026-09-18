@@ -1,0 +1,15 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.5
+qrcode>=7.4
+pillow>=10.0
+python-multipart>=0.0.9
+# Self-signed certificate generation for the opt-in HTTPS listener (phone PWA
+# needs a secure origin for the QR camera scanner). Without it the app falls
+# back to the openssl CLI; the packaged build has no openssl, so the wheel ships.
+cryptography>=42.0
+# Native desktop window (uses Edge WebView2 on Windows).
+pywebview>=5.0
+# Windows-only extras (optional at runtime):
+# psutil>=5.9
+# pywin32>=306

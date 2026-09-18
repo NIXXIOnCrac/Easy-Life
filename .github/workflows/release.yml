@@ -1,0 +1,207 @@
+name: Release
+
+# Builds the Windows app on a real Windows machine and publishes it.
+#
+# Trigger: push a version tag.
+#     git tag v0.2.0
+#     git push origin v0.2.0
+#
+# It can also be started by hand from the Actions tab (workflow_dispatch) - give
+# it the version and it uses/creates the v<version> tag.
+#
+# WHY this runs on GitHub's Windows runner: a PyInstaller .exe and an Inno Setup
+# installer can only be produced on Windows. There is no cross-compiling. This
+# workflow is the supported way to make a release from a machine that is not
+# Windows (for example, a development box running Linux).
+#
+# What it publishes to the GitHub Release:
+#   Easy-Life-Setup-<ver>.exe     the double-click installer (give this out)
+#   Easy-Life-<ver>-portable.exe  the single-file portable build
+#   Easy-Life-<ver>-update.zip    exactly what the in-app "Update now" downloads
+#   update.json                    the manifest the app reads to find updates
+#
+# The app's Settings -> Updates box should be pointed at the stable URL:
+#   https://github.com/<owner>/<repo>/releases/latest/download/update.json
+# (only non-draft, non-prerelease releases are served by /releases/latest/).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 0.2.0 (tag v<version> must exist, or it is created)"
+        required: true
+        type: string
+
+permissions:
+  contents: write   # create the release and upload its files
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Work out the version and tag
+        id: ver
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $ver = "${{ inputs.version }}".Trim().TrimStart("v", "V")
+            $tag = "v$ver"
+          } else {
+            $tag = "${{ github.ref_name }}"
+            $ver = $tag.TrimStart("v", "V")
+          }
+          if ($ver -notmatch '^\d+\.\d+') { throw "Unexpected version '$ver' (expected something like 0.2.0)" }
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "version=$ver" >> $env:GITHUB_OUTPUT
+          Write-Host "Releasing version $ver from tag $tag"
+
+      - name: Install the app and the build tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller pytest pytest-asyncio httpx
+
+      - name: Backend test suite
+        run: python -m pytest tests -q
+
+      - name: Frontend tests
+        # The three live_*/phone_* scripts in run_tests.bat need a running app and
+        # a browser; they are for the dev machine, not for CI.
+        run: |
+          npm ci --no-audit --no-fund
+          node tests/smoke_frontend.js
+          node tests/deck_render_test.js
+          node tests/onboarding_ui_test.js
+          node tests/frontend_regression_test.js
+          node tests/deep_pages_test.js
+
+      - name: Build the portable single-file app
+        env:
+          PCRITUALS_TARGET: portable
+        run: python -m PyInstaller --noconfirm --clean pcrituals.spec
+
+      - name: Build the app folder that the installer ships
+        env:
+          PCRITUALS_TARGET: installed
+        run: python -m PyInstaller --noconfirm --clean pcrituals.spec
+
+      - name: Check both builds contain the whole UI (packaging logic)
+        run: |
+          python scripts/verify_bundle.py "dist/Easy Life"
+          python scripts/verify_bundle.py "dist/Easy Life.exe"
+
+      - name: Smoke test the built app (it must start and serve its UI)
+        timeout-minutes: 5
+        run: python scripts/verify_bundle.py "dist/Easy Life" --smoke --timeout 90
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (Test-Path $iscc) { Write-Host "Inno Setup is already on this runner"; exit 0 }
+          choco install innosetup --no-progress -y
+          if (-not (Test-Path $iscc)) { throw "Inno Setup did not install" }
+
+      - name: Build the Windows installer
+        shell: pwsh
+        run: |
+          $iscc  = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          $ver   = "${{ steps.ver.outputs.version }}"
+          # The app folder must be in place: the .iss refuses to compile without
+          # it (it names the folder in a plain-English error message).
+          & $iscc "/DAppVersion=$ver" "installer\pc-rituals.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed (exit $LASTEXITCODE)" }
+          $setup = "dist\Easy-Life-Setup-$ver.exe"
+          if (-not (Test-Path $setup)) { throw "the installer was not produced" }
+          Write-Host "Built $setup"
+
+      - name: Package the update archive and write the update manifest
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          $tag = "${{ steps.ver.outputs.tag }}"
+
+          # A nicer download name for the portable single file.
+          Copy-Item "dist\Easy Life.exe" "dist\Easy-Life-$ver-portable.exe" -Force
+
+          # This zip is what the in-app updater downloads and unpacks over the
+          # install folder, so it must contain the app folder's CONTENTS at its
+          # root (exe + _internal\), not a wrapping folder.
+          Compress-Archive -Path "dist\Easy Life\*" `
+                           -DestinationPath "dist\Easy-Life-$ver-update.zip" -Force
+
+          # The asset URL is predictable, so the manifest can be written before
+          # the upload happens.
+          $url = "https://github.com/${{ github.repository }}/releases/download/$tag/Easy-Life-$ver-update.zip"
+          $subject = (git log -1 --pretty=%s)
+          if (-not $subject) { $subject = "Easy Life $ver" }
+
+          # scripts/make_update_manifest.py is the single source of truth for the
+          # manifest's field names - the same four fields pcrituals/update.py
+          # reads (version, url, notes, sha256). Never hand-write this JSON.
+          python scripts/make_update_manifest.py `
+            --version $ver `
+            --url $url `
+            --sha256-file "dist\Easy-Life-$ver-update.zip" `
+            --notes "Version $ver - $subject" `
+            --out "dist\update.json"
+          if ($LASTEXITCODE -ne 0) { throw "could not write the update manifest" }
+
+      - name: Publish the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          $tag = "${{ steps.ver.outputs.tag }}"
+
+          # Create the release if this tag does not have one yet. No --draft and
+          # no --prerelease: /releases/latest/ only serves normal releases, and
+          # that is the URL the app checks.
+          gh release view $tag 1>$null 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --title "Easy Life $ver" --generate-notes
+          }
+
+          gh release upload $tag `
+            "dist\Easy-Life-Setup-$ver.exe" `
+            "dist\Easy-Life-$ver-portable.exe" `
+            "dist\Easy-Life-$ver-update.zip" `
+            "dist\update.json" `
+            --clobber
+
+          if ($LASTEXITCODE -ne 0) { throw "uploading the release files failed" }
+
+      - name: Say what to do with it
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.version }}"
+          $repo = "${{ github.repository }}"
+          $lines = @(
+            "## Easy Life $ver is published",
+            "",
+            "| What | Where |",
+            "| --- | --- |",
+            "| Give this to users | https://github.com/$repo/releases/download/${{ steps.ver.outputs.tag }}/Easy-Life-Setup-$ver.exe |",
+            "| Portable single file | https://github.com/$repo/releases/download/${{ steps.ver.outputs.tag }}/Easy-Life-$ver-portable.exe |",
+            "| In-app update feed | https://github.com/$repo/releases/latest/download/update.json |",
+            "",
+            "Paste the update feed URL into the app's **Settings -> Updates** box.",
+            "From then on the app offers its own Update button - no re-downloading an installer.",
+            "",
+            "The manifest contains a sha256 of the update zip, so the app verifies the download before using it."
+          )
+          $lines -join "`n" | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY

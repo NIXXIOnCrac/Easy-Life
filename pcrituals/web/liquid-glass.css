@@ -1,0 +1,199 @@
+/* =========================================================================
+   PC Rituals — Apple "Liquid Glass" surface upgrade
+   =========================================================================
+   Layers ON TOP of the app's existing styles.css (link AFTER it). Re-uses
+   the app's variables and maps them onto the Apple liquid-glass language:
+   layered translucency, backdrop blur + saturation, the 1px specular top
+   light edge + soft top sheen, soft multi-layer depth shadows, continuous
+   corner radii, and quiet touch interaction (no sticky hovers on mobile).
+
+   SAFETY (older Chromium WebView2 + iOS Safari 15+):
+   - No color-mix(), :has(), @container, or CSS nesting.
+   - Every backdrop-filter has a plain, intentional fallback: translucent
+     fill first, then an explicit opaque fill when blur is unsupported.
+   - -webkit- prefix precedes the standard backdrop-filter everywhere.
+   - Hover-driven effects are gated behind @media (hover:hover) so no
+     state sticks after a tap on iPhone.
+   ========================================================================= */
+
+/* ---------- 0. Global touch polish ----------------------------------- */
+html { -webkit-text-size-adjust: 100%; }
+body { -webkit-tap-highlight-color: transparent; }
+
+/* h1.page-title gets Apple's exact en-title tracking (currently -0.025em). */
+h1.page-title { letter-spacing: -0.02em; }
+
+/* ---------- 1. Shared liquid-glass surface recipe --------------------
+   Base = translucent fill only (looks intentional without any blur).
+   Blur+saturate is then layered on for supporting engines. */
+.sidebar,
+.card, .ritual-card, .history-item, .runner-panel, .action-row,
+.modal, .update-banner, .toast, .deck-btn,
+.am-player, .am-pill, .auth-card, .pc-status, .stat-pill {
+  background:
+    linear-gradient(180deg, var(--lg-glass-highlight) 0%, rgba(255,255,255,0.10) 14%, transparent 42%),
+    linear-gradient(180deg, var(--lg-glass-fill), var(--lg-glass-fill-2));
+}
+
+.sidebar,
+.card, .ritual-card, .history-item, .runner-panel, .action-row,
+.modal, .update-banner, .toast, .deck-btn,
+.am-player, .am-pill, .auth-card {
+  -webkit-backdrop-filter: blur(var(--lg-blur-lg)) saturate(var(--lg-saturate));
+  backdrop-filter: blur(var(--lg-blur-lg)) saturate(var(--lg-saturate));
+}
+
+/* Compact controls blur less. */
+.btn, .stat-pill, .pc-status {
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+}
+
+/* Border: crisp hairline, visible without blur too. */
+.sidebar,
+.card, .ritual-card, .history-item, .runner-panel, .action-row,
+.modal, .update-banner, .toast, .deck-btn,
+.am-player, .am-pill, .auth-card {
+  border-color: var(--lg-glass-border);
+}
+
+/* Specular light edge + soft depth shadows (resting). */
+.sidebar,
+.card, .ritual-card, .runner-panel, .modal, .update-banner, .toast,
+.am-player, .auth-card {
+  box-shadow: var(--lg-shadow-top), var(--lg-shadow-rest);
+}
+.deck-btn, .am-pill, .history-item, .action-row, .stat-pill {
+  box-shadow: var(--lg-shadow-top), 0 2px 10px rgba(0, 0, 0, 0.30);
+}
+
+/* ---------- 2. Specular top sweep (the 1px light edge, softened) -----
+   Refines the app's existing streak and adds it to every glass panel. */
+.card::before, .ritual-card::before, .runner-panel::before,
+.modal::before, .auth-card::before, .am-player::before, .update-banner::before {
+  content: "";
+  position: absolute; left: 7%; right: 7%; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  pointer-events: none;
+}
+
+/* Panels that don't already carry position:relative from styles.css. */
+.modal, .auth-card, .am-player, .update-banner { position: relative; }
+
+/* ---------- 3. Raised / priority surfaces --------------------------- */
+.card { border-radius: var(--lg-radius-lg); }
+.ritual-card { border-radius: var(--lg-radius-lg); }
+.runner-panel { border-radius: var(--lg-radius-lg); }
+.history-item, .action-row { border-radius: var(--lg-radius-md); }
+.modal {
+  border-radius: var(--lg-radius-lg);
+  box-shadow: var(--lg-shadow-top), var(--lg-shadow-modal);
+}
+.auth-card {
+  border-radius: var(--lg-radius-lg);
+  box-shadow: var(--lg-shadow-top), var(--lg-shadow-modal);
+}
+.am-player { border-radius: var(--lg-radius-lg); }
+.update-banner { border-radius: 0 0 var(--lg-radius-lg) var(--lg-radius-lg); }
+.toast { border-radius: var(--lg-radius-pill); box-shadow: var(--lg-shadow-top), var(--lg-shadow-modal); }
+.deck-btn { border-radius: var(--lg-radius-lg); }
+.am-pill { border-radius: var(--lg-radius-pill); }
+.stat-pill { border-radius: var(--lg-radius-pill); }
+.pc-status { border-radius: var(--lg-radius-md); }
+
+/* Nav items and buttons keep their pill/soft radii under the LG system. */
+.nav-item { border-radius: var(--lg-radius-sm); }
+.btn { border-radius: var(--lg-radius-pill); }
+.toggle, .toggle::after { border-radius: var(--lg-radius-pill); }
+
+/* ---------- 4. Buttons & interactive controls -------------------------
+   Glass pill buttons: translucent fill + hairline + specular top edge.
+   Primary actions keep the app's neon gradient identity (just add the
+   crisp light rim Apple gives filled buttons). */
+.btn {
+  border: 1px solid var(--lg-glass-border-strong);
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+  box-shadow: var(--lg-shadow-top), 0 3px 10px rgba(0, 0, 0, 0.30);
+}
+.btn.primary, .btn.green, .btn.danger {
+  border-color: transparent;
+  box-shadow: var(--glow-blue), inset 0 1px 0 rgba(255,255,255,0.50), 0 3px 12px rgba(0,0,0,0.35);
+}
+.btn.green { box-shadow: var(--glow-green), inset 0 1px 0 rgba(255,255,255,0.50), 0 3px 12px rgba(0,0,0,0.35); }
+
+/* Inputs: quiet glass fields (no hard box, just an inner fill + focus ring). */
+input[type=text], input[type=url], input[type=number], input[type=password],
+select, textarea {
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  border-radius: var(--lg-radius-sm);
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--lg-accent);
+  box-shadow: 0 0 0 3px rgba(41,151,255,0.22);
+}
+
+/* ---------- 5. Hover = pointer only (no sticky states on touch) -------
+   All lift/hover effects are confined to @media (hover:hover) so iPhone
+   never holds a hovered state after a tap. */
+@media (hover: hover) {
+  .nav-item:hover { background: rgba(255,255,255,0.10); }
+  .icon-btn:hover { background: rgba(255,255,255,0.10); }
+  .btn:hover { background: rgba(255,255,255,0.16); }
+  .ritual-card:hover, .deck-btn:hover, .am-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--lg-shadow-top), var(--lg-shadow-raised);
+  }
+  .ritual-card:hover { border-color: var(--lg-glass-border-strong); }
+  .deck-btn:hover { border-color: var(--lg-glass-border-strong); }
+}
+
+/* ---------- 6. No-blur fallback (older WebView2 / Safari) ------------
+   If backdrop-filter is unsupported the translucent fill alone looks
+   washed out over the gradient, so switch to an intentional, legible,
+   slightly tinted near-black — still clearly "glass", no blank artefacts. */
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .sidebar,
+  .card, .ritual-card, .history-item, .runner-panel, .action-row,
+  .modal, .update-banner, .toast, .deck-btn,
+  .am-player, .am-pill, .auth-card, .stat-pill {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent 40%),
+                rgba(22, 24, 34, 0.92);
+  }
+  .btn {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: rgba(255,255,255,0.08);
+  }
+}
+
+/* Honor the OS "reduce transparency" preference already handled in
+   styles.css — our fills must not fight its opaque override. */
+@media (prefers-reduced-transparency: reduce) {
+  .card, .ritual-card, .history-item, .runner-panel, .action-row {
+    background: #14161f;
+  }
+}
+
+/* ---------- 7. Motion tweaks (HIG ≤ 1/3s feels immediate) ------------- */
+.card, .ritual-card, .deck-btn, .btn, .am-pill, .modal, .toast, .update-banner {
+  transition-duration: var(--lg-duration-fast);
+  transition-timing-function: var(--lg-ease-standard);
+}
+.deck-btn:active, .btn:active, .am-pill:active { transform: scale(0.96); }
+
+/* ---------- 8. Touch: neutralize any hover that could stick after tap - */
+@media (hover: none) {
+  .nav-item:hover, .icon-btn:hover { background: transparent; color: var(--muted); }
+  .nav-item.active:hover { background: var(--glass-strong); color: var(--text); }
+  .btn:hover,
+  .btn.primary:hover, .btn.green:hover, .btn.danger:hover {
+    background: rgba(255,255,255,0.08);
+  }
+  .ritual-card:hover, .deck-btn:hover, .am-pill:hover {
+    transform: none;
+    box-shadow: var(--lg-shadow-top), 0 2px 10px rgba(0, 0, 0, 0.30);
+  }
+  .deck-btn:hover, .ritual-card:hover { border-color: var(--lg-glass-border); }
+}

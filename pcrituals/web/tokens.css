@@ -1,0 +1,65 @@
+/* =========================================================================
+   PC Rituals — Apple "Liquid Glass" design tokens
+   Source: MIT-licensed chaos-xxl/apple-design-skill (CLAUDE.md / prompts/*)
+   plus Apple HIG patches flagged in ../DESIGN_TOKENS.md (repo root).
+   =========================================================================
+   Compatible with older Chromium WebView2 and iOS Safari 15+:
+   - No color-mix(), :has(), @container, or CSS nesting anywhere in this
+     project's new stylesheets.
+   - Re-uses the app's existing variables in styles.css (--glass*, --text,
+     --green, --radius*, --shadow) — none are renamed or removed here.
+   ========================================================================= */
+
+:root {
+  /* ----- 1. Text on dark canvas ----------------------------------------
+     Apple --apple-text-on-dark #F5F5F7 for primary; secondary/tertiary
+     grey steps mapped onto the dark canvas. App's neon accents untouched. */
+  --lg-text-primary: #F5F5F7;
+  --lg-text-secondary: rgba(245, 245, 247, 0.72);            /* ~ Apple #6E6E73 on dark */
+  --lg-text-tertiary: rgba(245, 245, 247, 0.50);             /* ~ Apple #86868B on dark */
+  --lg-accent: #2997FF;                                      /* Apple gradient-blue start */
+
+  /* ----- 2. Liquid-glass surface fill (layered translucency) ----------
+     Base tint on top, a second lower tint for depth. Highlight is the
+     top specular sheen used at low alpha over the fill gradient. */
+  --lg-glass-fill: rgba(255, 255, 255, 0.06);
+  --lg-glass-fill-2: rgba(255, 255, 255, 0.03);
+  --lg-glass-highlight: rgba(255, 255, 255, 0.60);           /* specular top streak */
+  --lg-glass-border: rgba(255, 255, 255, 0.14);
+  --lg-glass-border-strong: rgba(255, 255, 255, 0.24);
+
+  /* ----- 3. Backdrop (the "liquid" feel) ------------------------------- */
+  --lg-blur: 20px;                 /* compact surfaces, buttons, pills */
+  --lg-blur-lg: 36px;              /* large surfaces: cards, sidebar, modal */
+  --lg-saturate: 180%;             /* color-bleed richness of Apple glass */
+
+  /* ----- 4. Corner continuity (Apple card radii) ---------------------- */
+  --lg-radius-sm: 12px;
+  --lg-radius-md: 16px;
+  --lg-radius-lg: 20px;            /* Apple --apple-radius-card-lg */
+  --lg-radius-pill: 999px;         /* Apple pill-radius buttons */
+
+  /* ----- 5. Depth shadows (Apple's layered structure, re-gauged for
+            the dark #07070c canvas) -------------------------------------- */
+  --lg-shadow-top: inset 0 1px 0 rgba(255, 255, 255, 0.28);  /* specular light edge */
+  --lg-shadow-rest: 0 2px 8px rgba(0, 0, 0, 0.30), 0 8px 24px rgba(0, 0, 0, 0.34);
+  --lg-shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.34), 0 14px 34px rgba(0, 0, 0, 0.46);
+  --lg-shadow-modal: 0 8px 20px rgba(0, 0, 0, 0.40), 0 24px 70px rgba(0, 0, 0, 0.60);
+
+  /* ----- 6. Motion (app curves, already Apple-like; HIG ≤ 1/3s rule) --
+     Repo ships no easing/duration; these are styles.css values + HIG. */
+  --lg-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --lg-ease-spring: cubic-bezier(0.3, 0.9, 0.4, 1);          /* iOS switch */
+  --lg-duration-instant: 0.12s;    /* press feedback */
+  --lg-duration-fast: 0.2s;        /* immediate (HIG) */
+  --lg-duration-basic: 0.35s;      /* content/pop transitions */
+  --lg-duration-flow: 0.45s;       /* pronounced choreography (sparingly) */
+}
+
+/* ----- 7. Apple font stacks (English), layered over the app's --font ----- */
+:root {
+  --lg-font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                     "Helvetica Neue", "Helvetica", Arial, sans-serif;
+  --lg-font-text: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                  "Helvetica Neue", "Helvetica", Arial, sans-serif;
+}

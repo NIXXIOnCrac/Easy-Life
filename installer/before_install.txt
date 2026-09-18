@@ -1,0 +1,23 @@
+Easy Life Setup
+===============
+
+Thanks for installing Easy Life.
+
+Easy Life lets you build and run "Plays" — simple lists of things
+your PC should do: open apps, launch games, go to websites,
+wait, switch OBS scenes, and more.
+
+Your PC runs the Plays. Your iPhone can control them from anywhere.
+
+To get started:
+  1. Open Easy Life.
+  2. Create a username and password.
+  3. Build your first Play from the Dashboard.
+
+For help, see the app's Settings or the project README.
+
+This installer does not change your data. Your Plays, settings and
+paired phones stay in your Easy Life data folder — uninstalling the
+app never deletes that folder.
+
+~ Easy Life

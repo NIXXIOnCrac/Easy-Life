@@ -1,0 +1,24 @@
+Windows Registry Editor Version 5.00
+
+; Easy Life - optional registry entries
+; Point the "Windows registry file (.reg) to import" field at this file
+; in Actual Installer if you want registry keys created during install.
+; Leave the field empty if you do not need any.
+
+; Example: register the app in "Apps & Features" so it shows up there.
+; These are the same keys Inno Setup would create on its own - only use
+; this .reg if Actual Installer is the one building the installer.
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{7C4F1E62-9B3A-4E7D-9A21-5F0C2D8B4A11}]
+"DisplayName"="Easy Life"
+"DisplayVersion"="0.2.0"
+"Publisher"="Easy Life"
+"InstallLocation"="%LOCALAPPDATA%\\Programs\\Easy Life"
+"UninstallString"="\"%LOCALAPPDATA%\\Programs\\Easy Life\\Easy Life.exe\" /uninstall"
+"QuietUninstallString"="\"%LOCALAPPDATA%\\Programs\\Easy Life\\Easy Life.exe\" /uninstall /SILENT"
+"DisplayIcon"="%LOCALAPPDATA%\\Programs\\Easy Life\\Easy Life.exe"
+
+; Per-user run-at-login (created by the "start at login" task, not needed here).
+; Uncomment only if you want the installer itself to create it:
+; [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run]
+; "Easy Life"="%LOCALAPPDATA%\\Programs\\Easy Life\\Easy Life.exe"

@@ -1,0 +1,15 @@
+Easy Life is installed.
+
+Your Plays, settings and paired phones are kept in your Easy Life data
+folder, which the uninstaller never touches:
+
+  C:\Users\<you>\AppData\Local\Easy Life\data
+
+If you want the app to come up on its own, tick "Start Easy Life when
+I log in" — or just run it whenever you want from the Start Menu or
+the desktop shortcut.
+
+To control the app from your iPhone, open Settings in Easy Life and
+turn on "Use your phone from anywhere".
+
+~ Easy Life
