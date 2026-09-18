@@ -1,4 +1,5 @@
 # Easy Life
+  DOWNLOAD THE Easy-Life Download.zip file to downlaod then extract it and run setup_windows.bat and in it complete the setup and the build and the app will open and you can search it on your windows search bar to open
 
 > ### The App For Streamers, By Streamers 🎮
 > **Built by a streamer, for streamers.** Run your whole PC from your phone — launch apps, control OBS, rescue a dead stream, and never worry you're away from your setup when something goes wrong.
